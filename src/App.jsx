@@ -11,6 +11,7 @@ function App() {
   //入力フォーム
   const [title,setTitle] = useState('');
   const [amount,setAmount] = useState('');
+  const [date, setDate] = useState("");
 
   //ダークモード
   const [darkMode, setDarkMode] = useState(() => {
@@ -20,17 +21,19 @@ function App() {
 
   //追加処理
   const addExpense = () => {
-    if (!title||!amount) return;
+    if (!title||!amount||!date) return;
 
     const newExpense = {
       id:Date.now(),
       title:title,
-      amount:Number(amount)
+      amount:Number(amount),
+      date:date
     };
 
     setExpenses([...expenses,newExpense]);
     setTitle('');
     setAmount('');
+    setDate('');
   };
 
   //削除処理
@@ -49,6 +52,18 @@ function App() {
   useEffect(() => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
   }, [darkMode]);
+
+  const grouped = expenses.reduce((acc, expense) => {
+    const month = expense.date.slice(0, 7);
+
+    if (!acc[month]) {
+      acc[month] = [];
+    }
+
+    acc[month].push(expense);
+
+    return acc;
+  }, {});
 
   //合計
   const total = expenses.reduce((sum,expense) => {
@@ -74,17 +89,34 @@ function App() {
           value={amount}
           onChange={(e)=>setAmount(e.target.value)}
         />
+        <input
+          type="date"
+          value={date}
+          onChange={(e) => setDate(e.target.value)}
+        />
         <button onClick={addExpense}>追加</button>
       </div>
       <h2>合計 {total} 円</h2>
-      <ul>
-        {expenses.map((expense) => (
-          <li key={expense.id}>
-            {expense.title} {expense.amount}円
-            <button onClick={() => deleteExpense(expense.id)}>削除</button>
-          </li>
-        ))}
-      </ul>
+      {Object.entries(grouped).map(([month, items]) => {
+        const monthTotal = items.reduce((sum, expense) => {
+          return sum + expense.amount;
+        }, 0);
+        return (
+          <div key={month}>
+          <h3>{month} {monthTotal}円</h3>
+          <ul>
+            {items.map((expense) => (
+              <li key={expense.id}>
+                {expense.date} {expense.title} {expense.amount}円
+                <button onClick={() => deleteExpense(expense.id)}>
+                  削除
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+        );      
+      })}
     </div>
   );
 }

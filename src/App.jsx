@@ -1,5 +1,5 @@
-import {useState, useEffect} from "react";
-import "./App.css";
+import {useState,useEffect} from "react";
+import "./App.css"
 
 function App() {
   //支出一覧
@@ -9,15 +9,26 @@ function App() {
   });
 
   //入力フォーム
-  const [title,setTitle] = useState('');
-  const [amount,setAmount] = useState('');
-  const [date, setDate] = useState("");
+  const [title,setTitle] = useState('')
+  const [amount,setAmount] = useState('')
+  const [date,setDate] = useState('')
 
   //ダークモード
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedDarkMode = localStorage.getItem("darkMode");
-    return savedDarkMode ? JSON.parse(savedDarkMode) : false;
+  const [darkMode,setDarkMode] = useState(() => {
+    const savedDark = localStorage.getItem("dark");
+    return savedDark ? JSON.parse(savedDark) : false;
   });
+
+  //月ごとの支出
+  const grouped = expenses.reduce((dic,expense) => {
+    const month = expense.date.slice(0,7);
+
+    if (!dic[month]) dic[month] = [];
+
+    dic[month].push(expense)
+
+    return dic;
+  },{})
 
   //追加処理
   const addExpense = () => {
@@ -31,94 +42,72 @@ function App() {
     };
 
     setExpenses([...expenses,newExpense]);
+
     setTitle('');
     setAmount('');
     setDate('');
-  };
+  }
 
   //削除処理
   const deleteExpense = (id) => {
     const newExpenses = expenses.filter((expense) => {
       return expense.id !== id;
-   });
+    });
 
-   setExpenses(newExpenses);
-  };
+    setExpenses(newExpenses)
+  }
 
   useEffect(() => {
     localStorage.setItem("expenses",JSON.stringify(expenses));
   },[expenses])
 
   useEffect(() => {
-    localStorage.setItem("darkMode", JSON.stringify(darkMode));
-  }, [darkMode]);
-
-  const grouped = expenses.reduce((acc, expense) => {
-    const month = expense.date.slice(0, 7);
-
-    if (!acc[month]) {
-      acc[month] = [];
-    }
-
-    acc[month].push(expense);
-
-    return acc;
-  }, {});
-
-  //合計
-  const total = expenses.reduce((sum,expense) => {
-    return sum+expense.amount
-  },0)
+    localStorage.setItem("dark",JSON.stringify(darkMode));
+  },[darkMode])
 
   return (
-    <div className={darkMode ? "app dark" : "app"}>
+    <div className={darkMode ? 'app dark' : 'app'}>
       <h1>家計簿アプリ</h1>
-      <button onClick={() => setDarkMode(!darkMode)}>
-        {darkMode ? "☀️ ライト" : "🌙 ダーク"}
-      </button>
-      <div className="form">
+      <button onClick={() => setDarkMode(!darkMode)}>{darkMode ? "☀️ ライト" : "🌙 ダーク"}</button>
+      <div className='form'>
         <input
           type='text'
           placeholder='項目'
           value={title}
-          onChange={(e)=>setTitle(e.target.value)}
+          onChange={(e) => setTitle(e.target.value)}
         />
         <input
           type='number'
           placeholder='金額'
           value={amount}
-          onChange={(e)=>setAmount(e.target.value)}
+          onChange={(e) => setAmount(e.target.value)}
         />
         <input
-          type="date"
+          type='date'
           value={date}
           onChange={(e) => setDate(e.target.value)}
         />
         <button onClick={addExpense}>追加</button>
       </div>
-      <h2>合計 {total} 円</h2>
-      {Object.entries(grouped).map(([month, items]) => {
-        const monthTotal = items.reduce((sum, expense) => {
-          return sum + expense.amount;
-        }, 0);
-        return (
-          <div key={month}>
-          <h3>{month} {monthTotal}円</h3>
+      {Object.entries(grouped).map(([month,items]) => {
+        const total = items.reduce((s,expense) => {
+          return s+expense.amount
+        },0)
+
+        return(
           <ul>
+            <h3>{month} {total}円</h3>
             {items.map((expense) => (
               <li key={expense.id}>
-                {expense.date} {expense.title} {expense.amount}円
-                <button onClick={() => deleteExpense(expense.id)}>
-                  削除
-                </button>
+                {expense.title} {expense.amount}円 {expense.date}
+                <button onClick={() => deleteExpense(expense.id)}>削除</button>
               </li>
             ))}
           </ul>
-        </div>
-        );      
+        )
       })}
     </div>
-  );
+  )
 }
 
 export default App;

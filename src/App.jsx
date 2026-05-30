@@ -1,5 +1,12 @@
 import {useState,useEffect} from "react";
 import "./App.css"
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip
+} from "recharts";
 
 function App() {
   //支出一覧
@@ -29,6 +36,17 @@ function App() {
 
     return dic;
   },{})
+
+  const chartData = Object.entries(grouped).map(([month, items]) => {
+    const total = items.reduce((sum, expense) => {
+      return sum + expense.amount;
+    }, 0);
+
+    return {
+      month,
+      total,
+    };
+  });
 
   //追加処理
   const addExpense = () => {
@@ -89,13 +107,19 @@ function App() {
         />
         <button onClick={addExpense}>追加</button>
       </div>
+      <BarChart width={500} height={300} data={chartData}>
+        <XAxis dataKey="month" />
+        <YAxis />
+        <Tooltip />
+        <Bar dataKey="total" />
+      </BarChart>
       {Object.entries(grouped).map(([month,items]) => {
         const total = items.reduce((s,expense) => {
           return s+expense.amount
         },0)
 
         return(
-          <ul>
+          <ul key={month}>
             <h3>{month} {total}円</h3>
             {items.map((expense) => (
               <li key={expense.id}>
